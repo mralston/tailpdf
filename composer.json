@@ -1,0 +1,39 @@
+{
+  "name": "mralston/tailpdf",
+  "description": "Laravel friendly wrapper for TailPDF.",
+  "keywords": [
+    "mralston",
+    "tailpdf",
+    "tailwind",
+    "pdf"
+  ],
+  "homepage": "https://github.com/mralston/tailpdf",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Matt Ralston",
+      "email": "matt@mralston.co.uk",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Mralston\\TailPdf\\": "src"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Mralston\\TailPdf\\TailPdfServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
