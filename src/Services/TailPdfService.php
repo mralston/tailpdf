@@ -33,7 +33,7 @@ class TailPdfService
             'X-API-Key' => config('tailpdf.api_key'),
             'X-No-Store' => $this->store ? 'false' : 'true',
         ])
-            ->withUserAgent('TailPdf Laravel Package (https://packagist.org/packages/mralston/tailpdf)')
+            ->withUserAgent('TailPdf Laravel Package (github.com/mralston/tailpdf)')
             ->timeout($this->timeout)
             ->post('https://api.tailpdf.com/pdf', [
                 'content' => $html ?? $this->html,
