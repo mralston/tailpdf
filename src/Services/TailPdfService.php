@@ -35,6 +35,9 @@ class TailPdfService
     private int $timeout = 30;
 
     private ?Response $response = null;
+    private bool $async = false;
+    private ?string $uploadUrl = null;
+    private ?string $webhookUrl = null;
 
     public function pdf(?string $html = null): static
     {
@@ -52,6 +55,7 @@ class TailPdfService
                 'content' => $html ?? $this->html,
                 'fonts' => $this->fonts,
                 'config' => $this->tailwindConfig,
+                ...$this->async ? ['async' => true, 'upload_url' => $this->uploadUrl, 'webhook_url' => $this->webhookUrl] : [],
                 'pdfOptions' => [
                     'format' => $this->format->value,
                     'landscape' => $this->landscape,
@@ -64,7 +68,56 @@ class TailPdfService
             ])
             ->throw();
 
+        $this->noAsync();
+
         return $this;
+    }
+
+    public function async(string $uploadUrl, ?string $webhookUrl = null): static
+    {
+        $this->async = true;
+        $this->uploadUrl = $uploadUrl;
+        $this->webhookUrl = $webhookUrl;
+
+        return $this;
+    }
+
+    public function noAsync(): static
+    {
+        $this->async = false;
+        $this->uploadUrl = null;
+        $this->webhookUrl = null;
+
+        return $this;
+    }
+
+    public function jobId(): string
+    {
+        return $this->response->json('job_id');
+    }
+
+    public function status(): string
+    {
+        return $this->response->json('status');
+    }
+
+    public function statusUrl(): string
+    {
+        return $this->response->json('status_url');
+    }
+
+    public function pollStatus(): array
+    {
+        if (empty($this->statusUrl())) {
+            throw new \Exception('No status URL found');
+        }
+
+        return Http::withHeaders([
+            'X-API-Key' => config('tailpdf.api_key'),
+        ])
+            ->get('https://api.tailpdf.com' . $this->statusUrl())
+            ->throw()
+            ->json();
     }
 
     public function response(): Response
