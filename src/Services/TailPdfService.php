@@ -2,34 +2,47 @@
 
 namespace Mralston\TailPdf\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Mralston\TailPdf\Dto\Margin;
 use Mralston\TailPdf\Enums\Format;
-
-use function Laravel\Prompts\error;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TailPdfService
 {
     private bool $store = true;
+
     private array $fonts = [];
+
     private array $tailwindConfig = [];
+
     private Format $format = Format::A4;
+
     private bool $landscape = false;
+
     private bool $printBackground = true;
+
     private float $scale = 1;
+
     private ?float $width = null;
+
     private ?float $height = null;
+
     private ?Margin $margin = null;
+
     private ?string $html = null;
+
     private int $timeout = 30;
 
-    public function pdf(?string $html = null): string
+    private ?Response $response = null;
+
+    public function pdf(?string $html = null): static
     {
         if (empty($html) && empty($this->html)) {
             throw new \Exception('No HTML provided');
         }
 
-        $response = Http::withHeaders([
+        $this->response = Http::withHeaders([
             'X-API-Key' => config('tailpdf.api_key'),
             'X-No-Store' => $this->store ? 'false' : 'true',
         ])
@@ -44,14 +57,48 @@ class TailPdfService
                     'landscape' => $this->landscape,
                     'printBackground' => $this->printBackground,
                     'scale' => $this->scale,
-                    'margin' => $this->margin?->toArray() ?? [],
+                    ...$this->margin ? ['margin' => $this->margin->toArray()] : [],
                     ...$this->width ? ['width' => $this->width] : [],
                     ...$this->height ? ['height' => $this->height] : [],
                 ],
             ])
             ->throw();
 
-        return $response->body();
+        return $this;
+    }
+
+    public function response(): Response
+    {
+        return $this->response;
+    }
+
+    public function raw(): string
+    {
+        return $this->response->body();
+    }
+
+    public function stream(?string $filename = null): StreamedResponse
+    {
+        return response()->stream(function () {
+            echo $this->response->body();
+        }, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline'.($filename ? '; filename="'.$filename.'"' : ''),
+        ]);
+    }
+
+    public function download(?string $filename = null): StreamedResponse
+    {
+        return response()->streamDownload(function () {
+            echo $this->response->body();
+        }, $filename ?? 'document.pdf', [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
+    public function save(string $path): static
+    {
+        file_put_contents($path, $this->response->body());
     }
 
     public function store(): static

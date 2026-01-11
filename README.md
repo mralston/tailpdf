@@ -25,16 +25,41 @@ Use the TailPdf facade to render your PDF.
 ```php
 <?php
 
+// Render and return raw PDF content
 $pdf = TailPdf::defaultTailwindConfigFile()
     ->html('<h1>Test</h1>')
-    ->pdf();
+    ->pdf()
+    ->raw();
+    
+// Return a streamed PDF response
+return TailPdf::defaultTailwindConfigFile()
+    ->html('<h1>Test</h1>')
+    ->pdf()
+    ->stream();
+    
+// Return a streamed PDF download
+return TailPdf::defaultTailwindConfigFile()
+    ->html('<h1>Test</h1>')
+    ->pdf()
+    ->download('test.pdf');
 
-file_put_contents('test.pdf', $pdf);
+// Save a PDF to disk
+TailPdf::defaultTailwindConfigFile()
+    ->html('<h1>Test</h1>')
+    ->pdf()
+    ->save('test.pdf');
 ```
 
 ## Security Vulnerabilities
 
 Please [e-mail security vulnerabilities directly to me](mailto:matt@mralston.co.uk).
+
+## TailPDF Service
+
+This package requires a TailPDF account. Please visit https://tailpdf.com/
+
+The TailPDF service is copyright to Warm Energy Labs Limited.
+This package is not affiliated with Warm Energy Labs Limited.
 
 ## Licence
 
