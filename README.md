@@ -26,16 +26,16 @@ Use the TailPdf facade to render your PDF.
 <?php
 
 // Render and return raw PDF content
-$pdf = TailPdf::defaultTailwindConfigFile()
-    ->html('<h1>Test</h1>')
-    ->pdf()
-    ->raw();
+$pdf = TailPdf::defaultTailwindConfigFile() // load tailwind.config.js
+    ->html('<h1>Test</h1>') // supply HTML directly
+    ->pdf() // render PDF
+    ->raw(); // fetch raw PDF
     
-// Return a streamed PDF response
+// Return a streamed PDF response to the browser
 return TailPdf::defaultTailwindConfigFile()
     ->html('<h1>Test</h1>')
     ->pdf()
-    ->stream();
+    ->stream(); // stream can be returned from Laravel controller
     
 // Return a streamed PDF download
 return TailPdf::defaultTailwindConfigFile()
@@ -49,12 +49,17 @@ TailPdf::defaultTailwindConfigFile()
     ->pdf()
     ->save('test.pdf');
 
+// Render PDF from Laravel view
+TailPdf::defaultTailwindConfigFile()
+    ->view('my-view', [
+        'var' => 'value',
+    ])
+    ->pdf()
+    ->save('test.pdf');
+
 // Render PDF asyncronously and upload to bucket (see https://tailpdf.com/docs/async-jobs/)
-TailPdf::view('pdf.test_papers', [
-    'session' => $session,
-    'disciplines' => $disciplines,
-    'page_title' => $page_title,
-])
+TailPdf::defaultTailwindConfigFile()
+    ->html('<h1>Test</h1>')
     ->async(
         $bucketUrl, // Writeable bucket URL from AWS S3 / Cloudflare R2 / GCP Cloud Storage API
         $webhookUrl // URL where you receive status updates
