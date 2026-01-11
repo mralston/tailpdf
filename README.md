@@ -48,6 +48,20 @@ TailPdf::defaultTailwindConfigFile()
     ->html('<h1>Test</h1>')
     ->pdf()
     ->save('test.pdf');
+
+// Render PDF asyncronously and upload to bucket (see https://tailpdf.com/docs/async-jobs/)
+TailPdf::view('pdf.test_papers', [
+    'session' => $session,
+    'disciplines' => $disciplines,
+    'page_title' => $page_title,
+])
+    ->async(
+        $bucketUrl, // Writeable bucket URL from AWS S3 / Cloudflare R2 / GCP Cloud Storage API
+        $webhookUrl // URL where you receive status updates
+    )
+    ->pdf();
+
+$status = TailPdf::pollStatus(); // Check status manually
 ```
 
 ## Security Vulnerabilities
