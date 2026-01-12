@@ -4,6 +4,7 @@ namespace Mralston\TailPdf\Services;
 
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Mralston\TailPdf\Dto\Margin;
 use Mralston\TailPdf\Enums\Format;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -45,27 +46,35 @@ class TailPdfService
             throw new \Exception('No HTML provided');
         }
 
+        $payload = [
+            'content' => $html ?? $this->html,
+            'fonts' => $this->fonts,
+            'config' => $this->tailwindConfig,
+            ...$this->async ? [
+                'async' => true,
+                'upload_url' => $this->uploadUrl,
+                'webhook_url' => $this->webhookUrl
+            ] : [],
+            'pdfOptions' => [
+                'format' => $this->format->value,
+                'landscape' => $this->landscape,
+                'printBackground' => $this->printBackground,
+                'scale' => $this->scale,
+                ...$this->margin ? ['margin' => $this->margin->toArray()] : [],
+                ...$this->width ? ['width' => $this->width] : [],
+                ...$this->height ? ['height' => $this->height] : [],
+            ],
+        ];
+
+        Log::debug(json_encode($payload));
+
         $this->response = Http::withHeaders([
             'X-API-Key' => config('tailpdf.api_key'),
             'X-No-Store' => $this->store ? 'false' : 'true',
         ])
             ->withUserAgent('TailPdf Laravel Package (github.com/mralston/tailpdf)')
             ->timeout($this->timeout)
-            ->post('https://api.tailpdf.com/pdf', [
-                'content' => $html ?? $this->html,
-                'fonts' => $this->fonts,
-                'config' => $this->tailwindConfig,
-                ...$this->async ? ['async' => true, 'upload_url' => $this->uploadUrl, 'webhook_url' => $this->webhookUrl] : [],
-                'pdfOptions' => [
-                    'format' => $this->format->value,
-                    'landscape' => $this->landscape,
-                    'printBackground' => $this->printBackground,
-                    'scale' => $this->scale,
-                    ...$this->margin ? ['margin' => $this->margin->toArray()] : [],
-                    ...$this->width ? ['width' => $this->width] : [],
-                    ...$this->height ? ['height' => $this->height] : [],
-                ],
-            ])
+            ->post('https://api.tailpdf.com/pdf', $payload)
             ->throw();
 
         $this->noAsync();
